@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global safety net - deny all by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidBuildJob(data) {
+      return data.appName is string && data.appName.size() <= 200 &&
+             data.packageName is string && data.packageName.size() <= 200 &&
+             data.status is string && (data.status == 'queued' || data.status == 'running' || data.status == 'completed' || data.status == 'failed') &&
+             data.progress is int && data.progress >= 0 && data.progress <= 100 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    match /build_jobs/{jobId} {
+      allow create: if isValidId(jobId) && 
+                      isValidBuildJob(request.resource.data) &&
+                      request.resource.data.createdAt == request.time &&
+                      request.resource.data.updatedAt == request.time;
+                      
+      allow get, list: if true;
+
+      allow update: if isValidId(jobId) &&
+                      isValidBuildJob(request.resource.data) &&
+                      request.resource.data.updatedAt == request.time &&
+                      request.resource.data.createdAt == resource.data.createdAt &&
+                      request.resource.data.appName == resource.data.appName &&
+                      request.resource.data.packageName == resource.data.packageName;
+
+      allow delete: if false;
+    }
+  }
+}

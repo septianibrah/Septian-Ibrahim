@@ -1,0 +1,6 @@
+{
+  "name": "Local Logic Studio",
+  "description": "Powerful AI Coding Assistant powered by Alibaba DashScope Qwen models.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
